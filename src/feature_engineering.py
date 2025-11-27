@@ -1,84 +1,62 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
 
 class FeatureEngineer:
-    def __init__(self, selected_features=None):
-        self.selected_features = selected_features or [
-            'DomainAgeMonths', 'HostingProvider', 'NoOfiFrame', 'IsResponsive',
-            'LineOfCode', 'NoOfExternalRef', 'Robots', 'Industry'
-        ]
-        self.scalers = {}
-        self.encoders = {}
+    def __init__(self):
+        self.numerical_features = ['DomainAgeMonths', 'NoOfiFrame']
+        self.categorical_features = ['HostingProvider', 'IsResponsive']
+        self.preprocessor = None
+        
+    def fit_transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Fit and transform features"""
+        X = df.drop('label', axis=1)
+        y = df['label']
+        
+        # Create preprocessing pipeline
+        self.preprocessor = ColumnTransformer(
+            transformers=[
+                ('num', StandardScaler(), self.numerical_features),
+                ('cat', OneHotEncoder(drop='first', sparse_output=False), self.categorical_features)
+            ]
+        )
+        
+        X_processed = self.preprocessor.fit_transform(X)
+        feature_names = self._get_feature_names()
+        
+        processed_df = pd.DataFrame(X_processed, columns=feature_names)
+        processed_df['label'] = y.reset_index(drop=True)
+        
+        print(f"Created {len(feature_names)} features: {feature_names}")
+        return processed_df
     
-    def encode_categorical(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Encode categorical variables"""
-        df_encoded = df.copy()
+    def _get_feature_names(self) -> list:
+        """Get feature names after preprocessing"""
+        if self.preprocessor is None:
+            return []
         
-        categorical_features = ['HostingProvider', 'Industry']
-        binary_features = ['Robots', 'IsResponsive']
+        feature_names = []
+        for name, transformer, features in self.preprocessor.transformers_:
+            if name == 'num':
+                feature_names.extend(features)
+            elif name == 'cat':
+                encoder = transformer
+                cat_features = encoder.get_feature_names_out(features)
+                feature_names.extend(cat_features)
         
-        # Label encoding for high-cardinality categorical
-        for feature in categorical_features:
-            if feature in self.selected_features:
-                self.encoders[feature] = LabelEncoder()
-                df_encoded[feature] = self.encoders[feature].fit_transform(
-                    df_encoded[feature].astype(str)
-                )
-        
-        # Ensure binary features are numeric
-        for feature in binary_features:
-            if feature in self.selected_features:
-                df_encoded[feature] = df_encoded[feature].astype(int)
-        
-        return df_encoded
-    
-    def scale_numerical(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Scale numerical features"""
-        df_scaled = df.copy()
-        
-        numerical_features = [
-            'DomainAgeMonths', 'NoOfiFrame', 'LineOfCode', 'NoOfExternalRef'
-        ]
-        
-        for feature in numerical_features:
-            if feature in self.selected_features:
-                self.scalers[feature] = StandardScaler()
-                df_scaled[feature] = self.scalers[feature].fit_transform(
-                    df_scaled[[feature]]
-                )
-        
-        return df_scaled
-    
-    def create_interaction_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Create interaction features based on EDA insights"""
-        df_interaction = df.copy()
-        
-        # Domain age bins
-        df_interaction['DomainAge_Young'] = (df_interaction['DomainAgeMonths'] < 12).astype(int)
-        df_interaction['DomainAge_Mature'] = (df_interaction['DomainAgeMonths'] >= 24).astype(int)
-        
-        # High iframe count indicator
-        df_interaction['High_iFrames'] = (df_interaction['NoOfiFrame'] > 10).astype(int)
-        
-        return df_interaction
+        return feature_names
     
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Execute full feature engineering pipeline"""
-        print("Starting feature engineering...")
+        """Transform new data using fitted preprocessor"""
+        if self.preprocessor is None:
+            raise ValueError("Preprocessor not fitted. Call fit_transform first.")
         
-        df = self.encode_categorical(df)
-        df = self.scale_numerical(df)
-        df = self.create_interaction_features(df)
+        X = df.drop('label', axis=1)
+        X_processed = self.preprocessor.transform(X)
+        feature_names = self._get_feature_names()
         
-        # Select final features
-        final_features = [f for f in self.selected_features if f in df.columns]
-        final_features.extend(['DomainAge_Young', 'DomainAge_Mature', 'High_iFrames'])
+        processed_df = pd.DataFrame(X_processed, columns=feature_names)
+        processed_df['label'] = df['label'].reset_index(drop=True)
         
-        # Ensure target is included
-        if 'label' in df.columns and 'label' not in final_features:
-            final_features.append('label')
-        
-        print(f"Final feature set: {len(final_features)} features")
-        return df[final_features]
+        return processed_df
