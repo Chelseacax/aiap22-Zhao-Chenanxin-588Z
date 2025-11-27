@@ -1,2 +1,8 @@
 #!/bin/bash
-python src/train_model.py
+
+echo "Starting Phishing Detection Pipeline..."
+
+# Run the main pipeline
+python3 src/main.py
+
+echo "Pipeline execution completed!"
