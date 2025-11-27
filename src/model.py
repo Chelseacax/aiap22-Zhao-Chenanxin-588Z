@@ -1,8 +1,7 @@
 import pandas as pd
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
 from sklearn.model_selection import cross_val_score, StratifiedKFold
 import joblib
 
@@ -28,9 +27,11 @@ class ModelTrainer:
                 random_state=self.random_state,
                 max_iter=1000
             ),
-            'SVM': SVC(
-                random_state=self.random_state,
-                probability=True
+            'GradientBoosting': GradientBoostingClassifier(
+                n_estimators=100,
+                learning_rate=0.1,
+                max_depth=3,
+                random_state=self.random_state
             )
         }
         
