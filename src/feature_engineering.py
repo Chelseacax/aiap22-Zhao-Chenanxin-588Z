@@ -6,8 +6,26 @@ from sklearn.compose import ColumnTransformer
 class FeatureEngineer:
     def __init__(self):
         # Features will be discovered at fit time
-        self.numerical_features = None
-        self.categorical_features = None
+        # self.numerical_features = None
+        # self.categorical_features = None
+        self.numerical_features = [
+            'LineOfCode', 
+            'LargestLineLength', 
+            'NoOfURLRedirect',
+            'NoOfSelfRedirect', 
+            'NoOfPopup', 
+            'NoOfiFrame',
+            'NoOfSelfRef', 
+            'NoOfExternalRef', 
+            'DomainAgeMonths'
+        ]
+        
+        self.categorical_features = [
+            'HostingProvider',
+            'Industry'
+            'Robots',
+            'IsResponsive'
+        ]
         self.preprocessor = None
         
     def fit_transform(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -18,9 +36,32 @@ class FeatureEngineer:
         X = df.drop('label', axis=1).copy()
         y = df['label']
         
+        binary_features = ['Robots', 'IsResponsive']
+        
         # Auto-detect numerical and categorical features
-        self.numerical_features = X.select_dtypes(include=[np.number]).columns.tolist()
-        self.categorical_features = X.select_dtypes(include=['object', 'category', 'bool']).columns.tolist()
+        self.numerical_features = X.select_dtypes(include=[np.number]).columns.tolist() 
+        
+        # Exclude binary features from numerical features
+        self.numerical_features = [col for col in self.numerical_features if col not in binary_features]
+        
+        self.categorical_features = X.select_dtypes(include=['object', 'category', 'bool']).columns.tolist() 
+        # include binary features as categorical
+        for col in binary_features:
+            if col in X.columns and col not in self.categorical_features:
+                self.categorical_features.append(col)
+        
+        # # Identify binary numerical features (0 and 1 only) and treat as categorical
+        # binary_features = []
+        # for col in self.numerical_features:
+        #     unique_vals = set(X[col].unique())
+        #     # Check if ONLY contains 0 and/or 1 (no other values)
+        #     if  all(val in [0, 1, 0.0, 1.0] for val in unique_vals) and len(unique_vals) <= 2:
+        #         binary_features.append(col)
+        
+        # # Move binary features from numerical to categorical
+        # for col in binary_features:
+        #     self.numerical_features.remove(col)
+        #     self.categorical_features.append(col)
         
         print(f"Detected {len(self.numerical_features)} numerical features: {self.numerical_features}")
         print(f"Detected {len(self.categorical_features)} categorical features: {self.categorical_features}")
@@ -31,6 +72,9 @@ class FeatureEngineer:
             transformers.append(('num', StandardScaler(), self.numerical_features))
         if len(self.categorical_features) > 0:
             transformers.append(('cat', OneHotEncoder(drop='first', sparse_output=False), self.categorical_features))
+        
+        
+
         
         self.preprocessor = ColumnTransformer(transformers=transformers, remainder='drop')
         
