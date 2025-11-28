@@ -16,13 +16,15 @@ class ModelTrainer:
         X = df.drop('label', axis=1)
         y = df['label']
         
-        # 1. Split into train+val (80%) and test (20%) FIRST
-        X_train_val, X_test, y_train_val, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=self.random_state, stratify=y)
+        # # 1. Split into train+val (80%) and test (20%) FIRST
+        # X_train_val, X_test, y_train_val, y_test = train_test_split(
+        # X, y, test_size=0.2, random_state=self.random_state, stratify=y)
         
-        # Store test set for final evaluation
-        self.X_test = X_test
-        self.y_test = y_test
+        # # Store test set for final evaluation
+        # self.X_test = X_test
+        # self.y_test = y_test
+        # self.X = X_train_val
+        # self.y = y_train_val
         
         # Define models (at least 3 as required)
         models = {
@@ -60,7 +62,7 @@ class ModelTrainer:
             }
             
             # Train final model
-            model.fit( X_train_val, y_train_val)
+            model.fit( X, y)
             self.models[name] = model
             
             print(f"{name}: CV Accuracy = {acc_scores.mean():.4f} (+/- {acc_scores.std() * 2:.4f}), CV F1 = {f1_scores.mean():.4f} (+/- {f1_scores.std() * 2:.4f})")
