@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import cross_val_score, StratifiedKFold
+from sklearn.model_selection import cross_val_score, StratifiedKFold, train_test_split
 import joblib
 
 class ModelTrainer:
@@ -15,6 +15,14 @@ class ModelTrainer:
         """Train multiple models and return performance"""
         X = df.drop('label', axis=1)
         y = df['label']
+        
+        # 1. Split into train+val (80%) and test (20%) FIRST
+        X_train_val, X_test, y_train_val, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=self.random_state, stratify=y)
+        
+        # Store test set for final evaluation
+        self.X_test = X_test
+        self.y_test = y_test
         
         # Define models (at least 3 as required)
         models = {
@@ -52,18 +60,18 @@ class ModelTrainer:
             }
             
             # Train final model
-            model.fit(X, y)
+            model.fit( X_train_val, y_train_val)
             self.models[name] = model
             
             print(f"{name}: CV Accuracy = {acc_scores.mean():.4f} (+/- {acc_scores.std() * 2:.4f}), CV F1 = {f1_scores.mean():.4f} (+/- {f1_scores.std() * 2:.4f})")
         
         return self.models
     
-    def get_best_model(self) -> tuple:
-        """Get the best performing model based on f1 score"""
-        best_name = max(self.cv_scores.keys(), 
-                   key=lambda x: self.cv_scores[x].get('f1_mean', -np.inf))
-        return best_name, self.models[best_name]
+    # def get_best_model(self) -> tuple:
+    #     """Get the best performing model based on f1 score"""
+    #     best_name = max(self.cv_scores.keys(), 
+    #                key=lambda x: self.cv_scores[x].get('f1_mean', -np.inf))
+    #     return best_name, self.models[best_name]
     
     
     

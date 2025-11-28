@@ -50,7 +50,7 @@ def run_pipeline():
     print(report)
     
     # 8. Save best model
-    best_name, best_model = trainer.get_best_model()
+    best_name, best_model = evaluator.get_best_model()
     print(f"\nBest model: {best_name}")
     
     return results, best_model

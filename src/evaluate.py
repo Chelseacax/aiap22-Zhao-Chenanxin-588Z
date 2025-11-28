@@ -70,3 +70,24 @@ class ModelEvaluator:
             report_data.append(row)
         
         return pd.DataFrame(report_data)
+    
+    def get_best_model(self) -> tuple:
+        """Get the best performing model based on F1 score"""
+        if not self.results:
+            raise ValueError("No evaluation results available. Run evaluate_models first.")
+        
+        best_name = None
+        best_f1 = -np.inf
+        
+        for model_name, result in self.results.items():
+            f1_score_val = result['metrics'].get('f1', -np.inf)
+            if f1_score_val > best_f1:
+                best_f1 = f1_score_val
+                best_name = model_name
+        
+        print(f"\n=== BEST MODEL ===")
+        print(f"Model: {best_name}")
+        print(f"F1 Score: {best_f1:.4f}")
+        print(f"Metrics: {self.results[best_name]['metrics']}")
+        
+        return best_name, self.results[best_name]
