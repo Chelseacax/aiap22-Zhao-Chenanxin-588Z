@@ -39,6 +39,14 @@ class ModelEvaluator:
                 'classification_report': classification_report(y_test, y_pred, output_dict=True)
             }
             
+            #printing confusion matrix
+            plt.figure(figsize=(6, 4))
+            sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+            plt.title(f'Confusion Matrix for {name}')
+            plt.xlabel('Predicted')
+            plt.ylabel('Actual')
+            plt.show()
+            
             print(f"\n=== {name} Evaluation ===")
             for metric, value in metrics.items():
                 print(f"{metric}: {value:.4f}")
@@ -48,6 +56,9 @@ class ModelEvaluator:
     
     def plot_feature_importance(self, model, feature_names: list, top_n: int = 10):
         """Plot feature importance for tree-based models"""
+        print(f"DEBUG: Model type = {type(model)}")
+        print(f"DEBUG: Has feature_importances_? {hasattr(model, 'feature_importances_')}")
+        
         if hasattr(model, 'feature_importances_'):
             importances = model.feature_importances_
             indices = np.argsort(importances)[::-1]
@@ -60,6 +71,16 @@ class ModelEvaluator:
                       [feature_names[i] for i in indices[:top_n]], rotation=45)
             plt.tight_layout()
             plt.show()
+            
+            # Return feature importance data
+            importance_df = pd.DataFrame({
+                'feature': [feature_names[i] for i in indices[:top_n]],
+                'importance': importances[indices[:top_n]]
+            })
+            return importance_df
+        else:
+            print(f"Model {type(model).__name__} does not support feature importance")
+            return None
     
     def generate_report(self) -> pd.DataFrame:
         """Generate comprehensive evaluation report"""

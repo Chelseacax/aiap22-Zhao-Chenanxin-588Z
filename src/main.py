@@ -49,11 +49,26 @@ def run_pipeline():
     print("\n=== FINAL RESULTS ===")
     print(report)
     
-    # 8. Save best model
-    best_name, best_model = evaluator.get_best_model()
+    # 8. Get best model
+    best_name, best_results = evaluator.get_best_model()
+    best_model_object = trainer.models[best_name]  # Get actual model from trainer
     print(f"\nBest model: {best_name}")
     
-    return results, best_model
+    # 9. Plot feature importance for best model if applicable
+    print("\n9. Feature Importance Analysis:")
+    importance_df = evaluator.plot_feature_importance(
+        best_model_object,  # Pass the actual trained model object
+        feature_names=X.columns.tolist(), 
+        top_n=10
+    )
+    
+    if importance_df is not None:
+        print("\nTop 10 Features by Importance:")
+        print(importance_df)
+    
+    return best_results, best_model_object
 
+    
+    
 if __name__ == "__main__":
     results, best_model = run_pipeline()
