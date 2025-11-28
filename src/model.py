@@ -2,70 +2,81 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import cross_val_score, StratifiedKFold, train_test_split
+from sklearn.model_selection import cross_val_score, StratifiedKFold, train_test_split, GridSearchCV
 import joblib
 
 class ModelTrainer:
-    def __init__(self, random_state: int = 42):
+    def __init__(self, random_state: int = 42,tune_hyperparams: bool = True):
         self.random_state = random_state
+        self.tune_hyperparams = tune_hyperparams
         self.models = {}
+        self.best_params = {}
         self.cv_scores = {}
         
     def train_models(self, df: pd.DataFrame) -> dict:
-        """Train multiple models and return performance"""
+        """Train models with hyperparameter tuning (no parallel processing)"""
         X = df.drop('label', axis=1)
         y = df['label']
         
-        # # 1. Split into train+val (80%) and test (20%) FIRST
-        # X_train_val, X_test, y_train_val, y_test = train_test_split(
-        # X, y, test_size=0.2, random_state=self.random_state, stratify=y)
-        
-        # # Store test set for final evaluation
-        # self.X_test = X_test
-        # self.y_test = y_test
-        # self.X = X_train_val
-        # self.y = y_train_val
-        
-        # Define models (at least 3 as required)
-        models = {
-            'RandomForest': RandomForestClassifier(
-                n_estimators=100, 
-                random_state=self.random_state,
-                max_depth=10
-            ),
-            'LogisticRegression': LogisticRegression(
-                random_state=self.random_state,
-                max_iter=1000
-            ),
-            'GradientBoosting': GradientBoostingClassifier(
-                n_estimators=100,
-                learning_rate=0.1,
-                max_depth=3,
-                random_state=self.random_state
-            )
+        base_models = {
+            'RandomForest': RandomForestClassifier(random_state=self.random_state),
+            'LogisticRegression': LogisticRegression(random_state=self.random_state, max_iter=1000),
+            'GradientBoosting': GradientBoostingClassifier(random_state=self.random_state)
         }
         
-  # Cross-validation
-        cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=self.random_state)
-        self.cv = cv
-        
-        for name, model in models.items():
-            # Cross-validation scores (accuracy)
-            acc_scores = cross_val_score(model, X, y, cv=cv, scoring='accuracy')
-            # Cross-validation scores (f1)
-            f1_scores = cross_val_score(model, X, y, cv=cv, scoring='f1')
-            self.cv_scores[name] = {
-                'accuracy_mean': acc_scores.mean(),
-                'accuracy_std': acc_scores.std(),
-                'f1_mean': f1_scores.mean(),
-                'f1_std': f1_scores.std()
+        # Simplified parameter grids (fewer combinations)
+        param_grids = {
+            'RandomForest': {
+                'n_estimators': [100, 200],
+                'max_depth': [5, 10]
+            },
+            'LogisticRegression': {
+                'C': [0.1, 1.0, 10.0]
+            },
+            'GradientBoosting': {
+                'n_estimators': [100, 200],
+                'learning_rate': [0.1, 0.2]
             }
-            
-            # Train final model
-            model.fit( X, y)
-            self.models[name] = model
-            
-            print(f"{name}: CV Accuracy = {acc_scores.mean():.4f} (+/- {acc_scores.std() * 2:.4f}), CV F1 = {f1_scores.mean():.4f} (+/- {f1_scores.std() * 2:.4f})")
+        }
+        
+        cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=self.random_state)
+        
+        for name, base_model in base_models.items():
+            if self.tune_hyperparams:
+                print(f"\n🔧 Tuning {name}...")
+                
+                grid_search = GridSearchCV(
+                    base_model, 
+                    param_grids[name], 
+                    cv=cv, 
+                    scoring='f1',
+                    n_jobs=1,  # ✅ FIX: Disable parallel processing
+                    verbose=1   # ✅ Show progress
+                )
+                
+                grid_search.fit(X, y)
+                self.models[name] = grid_search.best_estimator_
+                self.best_params[name] = grid_search.best_params_
+                self.cv_scores[name] = {
+                    'f1_mean': grid_search.best_score_,
+                    'best_params': grid_search.best_params_
+                }
+                
+                print(f"✅ {name} - Best F1: {grid_search.best_score_:.4f}")
+                
+            else:
+                # No tuning - much faster
+                print(f"\n⚡ Training {name} with default parameters...")
+                model = base_model
+                model.fit(X, y)
+                self.models[name] = model
+                
+                f1_scores = cross_val_score(model, X, y, cv=cv, scoring='f1')
+                self.cv_scores[name] = {
+                    'f1_mean': f1_scores.mean(),
+                    'best_params': 'default'
+                }
+                print(f"✅ {name} - CV F1: {f1_scores.mean():.4f}")
         
         return self.models
     

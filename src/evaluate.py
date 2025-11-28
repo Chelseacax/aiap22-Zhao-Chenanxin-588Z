@@ -56,8 +56,8 @@ class ModelEvaluator:
     
     def plot_feature_importance(self, model, feature_names: list, top_n: int = 10):
         """Plot feature importance for tree-based models"""
-        print(f"DEBUG: Model type = {type(model)}")
-        print(f"DEBUG: Has feature_importances_? {hasattr(model, 'feature_importances_')}")
+        # print(f"DEBUG: Model type = {type(model)}")
+        # print(f"DEBUG: Has feature_importances_? {hasattr(model, 'feature_importances_')}")
         
         if hasattr(model, 'feature_importances_'):
             importances = model.feature_importances_
