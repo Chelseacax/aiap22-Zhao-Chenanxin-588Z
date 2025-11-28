@@ -35,30 +35,37 @@ class ModelTrainer:
             )
         }
         
-        # Cross-validation
+  # Cross-validation
         cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=self.random_state)
+        self.cv = cv
         
         for name, model in models.items():
-            # Cross-validation scores
-            cv_scores = cross_val_score(model, X, y, cv=cv, scoring='accuracy')
+            # Cross-validation scores (accuracy)
+            acc_scores = cross_val_score(model, X, y, cv=cv, scoring='accuracy')
+            # Cross-validation scores (f1)
+            f1_scores = cross_val_score(model, X, y, cv=cv, scoring='f1')
             self.cv_scores[name] = {
-                'mean': cv_scores.mean(),
-                'std': cv_scores.std()
+                'accuracy_mean': acc_scores.mean(),
+                'accuracy_std': acc_scores.std(),
+                'f1_mean': f1_scores.mean(),
+                'f1_std': f1_scores.std()
             }
             
             # Train final model
             model.fit(X, y)
             self.models[name] = model
             
-            print(f"{name}: CV Accuracy = {cv_scores.mean():.4f} (+/- {cv_scores.std() * 2:.4f})")
+            print(f"{name}: CV Accuracy = {acc_scores.mean():.4f} (+/- {acc_scores.std() * 2:.4f}), CV F1 = {f1_scores.mean():.4f} (+/- {f1_scores.std() * 2:.4f})")
         
         return self.models
     
     def get_best_model(self) -> tuple:
-        """Get the best performing model based on CV scores"""
+        """Get the best performing model based on f1 score"""
         best_name = max(self.cv_scores.keys(), 
-                       key=lambda x: self.cv_scores[x]['mean'])
+                   key=lambda x: self.cv_scores[x].get('f1_mean', -np.inf))
         return best_name, self.models[best_name]
+    
+    
     
     def save_models(self, path: str = "models/"):
         """Save trained models"""
