@@ -87,36 +87,42 @@ graph TD
 2. **Preprocess**: Properly processed the data based on the outliers/missing data found in EDA
 3. **Final Model Choices**: Given these data-driven considerations, the following three models were selected:
 
- 📌 1. Logistic Regression (Baseline, Interpretable)
-        **Why?**
-        - Provides a clear, explainable baseline
-        - Coefficients allow straightforward interpretation of feature effects
-        - Useful for validating trends observed in EDA
-        **Limitations:**
-        - Assumes linearity
-        - Not robust to skew/outliers
-        - May underperform compared to non-linear models
+    1) Logistic Regression (Baseline, Interpretable)
 
-📌 2. Random Forest Classifier (Robust Baseline Tree Model)
-        **Why?**
-        - Handles extreme skew and outliers without preprocessing
-        - Captures non-linear feature relationships
-        - Easily interpretable through feature importances
-        - Works well on mixed numerical + categorical data
-        **Strength:**
-        - Very stable, low risk of overfitting due to ensembling
-        - Good benchmark tree-based model
+            **Why?**
+            - Provides a clear, explainable baseline
+            - Coefficients allow straightforward interpretation of feature effects
+            - Useful for validating trends observed in EDA
 
-📌 3. XGBoost / Gradient Boosting Classifier (High-Performance Model)
-        **Why?**
-        - Best suited for datasets with skewed, noisy, and high-variance features
-        - Learns complex interactions between numeric and categorical variables
-        - Typically achieves state-of-the-art performance on tabular classification
-        - Provides SHAP values for detailed interpretability
-        **Strength:**
-        Handles subtle patterns such as:
-        - "Low Domain Age + Free Hosting Provider = high phishing probability"
-        - "Large number of images but site responsive = legitimate"
+            **Limitations:**
+            - Assumes linearity
+            - Not robust to skew/outliers
+            - May underperform compared to non-linear models
+
+    2) Random Forest Classifier (Robust Baseline Tree Model)
+
+            **Why?**
+            - Handles extreme skew and outliers without preprocessing
+            - Captures non-linear feature relationships
+            - Easily interpretable through feature importances
+            - Works well on mixed numerical + categorical data
+
+            **Strength:**
+            - Very stable, low risk of overfitting due to ensembling
+            - Good benchmark tree-based model
+
+    3) XGBoost / Gradient Boosting Classifier (High-Performance Model)
+
+            **Why?**
+            - Best suited for datasets with skewed, noisy, and high-variance features
+            - Learns complex interactions between numeric and categorical variables
+            - Typically achieves state-of-the-art performance on tabular classification
+            - Provides SHAP values for detailed interpretability
+            
+            **Strength:**
+            Handles subtle patterns such as:
+            - "Low Domain Age + Free Hosting Provider = high phishing probability"
+            - "Large number of images but site responsive = legitimate"
 
 
 ## f. Feature Processing Summary
@@ -167,7 +173,6 @@ Based on cross-validation, models achieve:
 - **Final Selection**: F1-score (In phishing detection, F1 score is prioritized over ROC-AUC because it directly addresses the critical business trade-off between false positives (legitimate sites incorrectly blocked, causing user frustration) and false negatives (missed phishing sites, creating security risks). While ROC-AUC measures overall class separation ability, F1 score specifically balances precision and recall, ensuring the model neither overwhelms users with false alarms nor misses dangerous phishing attempts - both of which have significant real-world consequences in cybersecurity applications where both error types carry substantial costs.)
 
 
----
 
 ## Conclusion
 This pipeline demonstrates a robust approach to phishing detection using machine learning, with careful attention to data quality, model selection, and evaluation methodology. The modular design allows for easy maintenance and extension as new features or models become available.
