@@ -50,8 +50,8 @@ class ModelTrainer:
                     param_grids[name], 
                     cv=cv, 
                     scoring='f1',
-                    n_jobs=1,  # ✅ FIX: Disable parallel processing
-                    verbose=1   # ✅ Show progress
+                    n_jobs=1,  
+                    verbose=1   
                 )
                 
                 grid_search.fit(X, y)
