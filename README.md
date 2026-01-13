@@ -6,14 +6,22 @@
 
 ## b. Project Overview
 
-Phishing detection is a binary classification problem
-    - False positives block legitimate websites, causing user frustration
-    - False negatives allow phishing attacks, creating security risks
-    - Both error types have real-world consequences, requiring careful model and metric selection
-
 This project implements an end-to-end machine learning pipeline for detecting phishing websites using various technical and categorical features extracted from website characteristics.
 
-### Folder Structure
+1. Problem Statement
+    
+    Phishing detection is a binary classification problem: 
+    * False positives block legitimate websites, causing user frustration
+    * False negatives allow phishing attacks, creating security risks
+    * Both error types have real-world consequences, requiring careful model and metric selection
+
+2. A machine learning pipeline is necessary because it:
+   
+    * Learns patterns from historical data instead of hard-coded rules
+    * Generalizes to unseen websites
+    * Ensures reproducibility, correctness, and fairness through structured steps
+
+3. Folder Structure
 ```
 aiap22-Zhao-Chenanxin-588Z/
 ├── src/
@@ -49,46 +57,35 @@ python src/main.py
 python3 src/main.py  
 ```
 
-### Modifying Parameters
-Key parameters can be modified in `src/main.py`:
-```python
 
-# Data splitting ratio
-test_size = 0.2
+## d. Key EDA Findings & Pipeline Choices
 
-```
+### 1. EDA Rationale
 
-## d. Pipeline Flow
+In this project, EDA helped answer:
+- Are features numeric, categorical, binary, or mixed? (step 1)
+- Are there any data quality issues (step 2 & 3 & 4)
+- Are distributions skewed or clean? (step 5 & 6 & 7)
+- Are relationships linear or non-linear? (step 7)
+- Are some features potentially strong signals? (step 8)
 
-```mermaid
-graph TD
-    A[Data Loading] --> B[Data Preprocessing]
-    B --> C[Feature Engineering]
-    C --> D[Train/Test Split]
-    D --> E[Model Training]
-    E --> F[Hyperparameter Tuning]
-    F --> G[Model Evaluation]
-    G --> H[Results Analysis]
-```
+### 2. Steps in EDA
+- STEP 1: Data Acquisition
+- STEP 2: Missing Data Assessment
+- STEP 3: Missing Data Handling Strategy
+- STEP 4: Categorical Data Quality Assessment
+- Step 5: Numerical Outlier Detection
+- STEP 6: Outlier Handling Strategy
+- STEP 7 Feature Relationships
+- STEP 8: Rank & Evaluate Features
 
-**Logical Steps:**
-1. **Data Acquisition**: Download and load data from SQLite database
-2. **Preprocessing**: Handle missing values, outliers, and data validation
-3. **Feature Engineering**: Scale numerical features, encode categorical variables
-4. **Model Training**: Train multiple algorithms with cross-validation
-5. **Hyperparameter Tuning**: Optimize model parameters using GridSearch
-6. **Evaluation**: Comprehensive performance assessment on test set
-7. **Analysis**: Feature importance and model interpretation
-
-## e. Key EDA Findings & Pipeline Choices
-
-### Summary of EDA Insights:
+### 3. Summary of EDA Insights:
 - **Domain Age**: Strongest predictor - legitimate sites are significantly older (39 vs 8 months median)
 - **Technical Sophistication**: Legitimate sites show more complexity (code, images, iframes)
 - **Infrastructure Patterns**: Free hosting providers strongly associated with phishing
 - **Website Quality**: Responsive design and robots.txt indicate legitimacy
 
-### Pipeline Decisions Based on EDA:
+### 4. Pipeline Decisions Based on EDA:
 1. **Feature Selection**: Used all available features as each provided unique signals
 2. **Preprocess**: Properly processed the data based on the outliers/missing data found in EDA
 3. **Final Model Choices**: Given these data-driven considerations, the following three models were selected:
@@ -130,6 +127,27 @@ graph TD
             - "Low Domain Age + Free Hosting Provider = high phishing probability"
             - "Large number of images but site responsive = legitimate"
 
+## e. Pipeline Flow
+
+```mermaid
+graph TD
+    A[Data Loading] --> B[Data Preprocessing]
+    B --> C[Feature Engineering]
+    C --> D[Train/Test Split]
+    D --> E[Model Training]
+    E --> F[Hyperparameter Tuning]
+    F --> G[Model Evaluation]
+    G --> H[Results Analysis]
+```
+
+**Logical Steps:**
+1. **Data Acquisition**: Download and load data from SQLite database
+2. **Preprocessing**: Handle missing values, outliers, and data validation
+3. **Feature Engineering**: Scale numerical features, encode categorical variables
+4. **Model Training**: Train multiple algorithms with cross-validation
+5. **Hyperparameter Tuning**: Optimize model parameters using GridSearch
+6. **Evaluation**: Comprehensive performance assessment on test set
+7. **Analysis**: Feature importance and model interpretation
 
 ## f. Feature Processing Summary
 
@@ -162,8 +180,8 @@ graph TD
 
 ### Evaluation Metrics:
 - **Accuracy**: Overall correctness rate
-- **Precision**: Proportion of true positives among predicted positives (avoid false alarms)
 - **Recall**: Proportion of actual positives correctly identified (catch phishing sites)
+- **Precision**: Proportion of true positives among predicted positives (avoid false alarms)
 - **F1-Score**: Harmonic mean of precision and recall (balanced metric)
 - **ROC-AUC**: Model's ability to distinguish between classes
 
