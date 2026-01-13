@@ -5,6 +5,12 @@
 - **Email Address**: chelseazhao233@gmail.com
 
 ## b. Project Overview
+
+Phishing detection is a binary classification problem
+    - False positives block legitimate websites, causing user frustration
+    - False negatives allow phishing attacks, creating security risks
+    - Both error types have real-world consequences, requiring careful model and metric selection
+
 This project implements an end-to-end machine learning pipeline for detecting phishing websites using various technical and categorical features extracted from website characteristics.
 
 ### Folder Structure
