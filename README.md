@@ -60,72 +60,96 @@ python3 src/main.py
 
 ## d. Key EDA Findings & Pipeline Choices
 
-### 1. EDA Rationale
-
-In this project, EDA helped answer:
-- Are features numeric, categorical, binary, or mixed? (step 1)
-- Are there any data quality issues (step 2 & 3 & 4)
-- Are distributions skewed or clean? (step 5 & 6 & 7)
-- Are relationships linear or non-linear? (step 7)
-- Are some features potentially strong signals? (step 8)
-
-### 2. Steps in EDA
+### 1. Steps in EDA
 - STEP 1: Data Acquisition
 - STEP 2: Missing Data Assessment
 - STEP 3: Missing Data Handling Strategy
 - STEP 4: Categorical Data Quality Assessment
-- Step 5: Numerical Outlier Detection
+- STEP 5: Numerical Outlier Detection
 - STEP 6: Outlier Handling Strategy
 - STEP 7 Feature Relationships
 - STEP 8: Rank & Evaluate Features
 
-### 3. Summary of EDA Insights:
-- **Domain Age**: Strongest predictor - legitimate sites are significantly older (39 vs 8 months median)
-- **Technical Sophistication**: Legitimate sites show more complexity (code, images, iframes)
-- **Infrastructure Patterns**: Free hosting providers strongly associated with phishing
-- **Website Quality**: Responsive design and robots.txt indicate legitimacy
+### 2. Understanding the Data Landscape**
 
-### 4. Pipeline Decisions Based on EDA:
-1. **Feature Selection**: Used all available features as each provided unique signals
-2. **Preprocess**: Properly processed the data based on the missing data found in EDA
-3. **Final Model Choices**: Given these data-driven considerations, the following three models were selected:
+**We began with exploratory questions:**
 
-    1) Logistic Regression (Baseline, Interpretable)
+1. **"What kind of data do we have?"** → Found mixed numerical/categorical features
+2. **"Is the data clean?"** → Discovered missing values and negative counts needing fixing  
+3. **"What patterns exist?"** → Uncovered that legitimate sites are older, more complex
+4. **"Do features have linear relationship?"** → Revealed weak linear but strong non-linear relationships
 
-            **Why?**
-            - Provides a clear, explainable baseline
-            - Coefficients allow straightforward interpretation of feature effects
-            - Useful for validating trends observed in EDA
+---
 
-            **Limitations:**
-            - Assumes linearity
-            - Not robust to skew/outliers
-            - May underperform compared to non-linear models
+### 3.Translating Insights into Action**
 
-    2) Random Forest Classifier (Robust Baseline Tree Model)
+**Armed with these insights, we designed a pipeline that directly addresses what we learned:**
 
-            **Why?**
-            - Handles extreme skew and outliers without preprocessing
-            - Captures non-linear feature relationships
-            - Easily interpretable through feature importances
-            - Works well on mixed numerical + categorical data
+#### **Insight 1 → Pipeline Component 1**
+```
+EDA FOUND: Low linear correlations (max = 0.333)
+→ PIPELINE RESPONSE: Prioritize non-linear models
+   • Selected Gradient Boosting & Random Forest
+   • Included Logistic Regression as baseline (knowing it would underperform)
+```
 
-            **Strength:**
-            - Very stable, low risk of overfitting due to ensembling
-            - Good benchmark tree-based model
+1) Logistic Regression (Baseline, Interpretable)
 
-    3) Gradient Boosting Classifier (High-Performance Model)
+    Why?
+    - Provides a clear, explainable baseline
+    - Coefficients allow straightforward interpretation of feature effects
+    - Useful for validating trends observed in EDA
 
-            **Why?**
-            - Best suited for datasets with skewed, noisy, and high-variance features
-            - Learns complex interactions between numeric and categorical variables
-            - Typically achieves state-of-the-art performance on tabular classification
-            - Provides SHAP values for detailed interpretability
-            
-            **Strength:**
-            Handles subtle patterns such as:
-            - "Low Domain Age + Free Hosting Provider = high phishing probability"
-            - "Large number of images but site responsive = legitimate"
+    Limitations:
+    - Assumes linearity
+    - Not robust to skew/outliers
+    - May underperform compared to non-linear models
+
+2) Random Forest Classifier (Robust Baseline Tree Model)
+
+    Why?
+    - Handles extreme skew and outliers without preprocessing
+    - Captures non-linear feature relationships
+    - Easily interpretable through feature importances
+    - Works well on mixed numerical + categorical data
+
+    Strength:
+    - Very stable, low risk of overfitting due to ensembling
+    - Good benchmark tree-based model
+
+3) Gradient Boosting Classifier (High-Performance Model)
+
+    Why?
+    - Best suited for datasets with skewed, noisy, and high-variance features
+    - Learns complex interactions between numeric and categorical variables
+    - Typically achieves state-of-the-art performance on tabular classification
+    - Provides SHAP values for detailed interpretability
+    
+    Strength:
+    Handles subtle patterns such as:
+    - "Low Domain Age + Free Hosting Provider = high phishing probability"
+    - "Large number of images but site responsive = legitimate"
+
+
+#### **Insight 2 → Pipeline Component 2**  
+```
+EDA FOUND: Each feature shows SOME predictive value
+→ PIPELINE RESPONSE: Keep all features, engineer carefully
+   • Used OneHotEncoding for categoricals (no high-cardinality issues)
+   • Applied StandardScaler for numericals
+   • Created 34 features from original 15
+```
+
+#### **Insight 3 → Pipeline Component 3**
+```
+EDA FOUND: Data quality issues (missing values, negative counts)
+→ PIPELINE RESPONSE: Targeted preprocessing
+   • Median imputation for 2,355 missing LineOfCode values
+   • Zero-correction for 377 negative image counts
+   • No outlier removal (extremes could be meaningful attack signals)
+```
+
+
 
 ## e. Pipeline Flow
 
